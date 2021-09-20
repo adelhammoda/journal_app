@@ -1,9 +1,7 @@
-
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:journal_app/models/journal.dart';
 import 'package:journal_app/services/db_firestore_api.dart';
-
 
 class DbFireStore implements DbApi {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -11,40 +9,46 @@ class DbFireStore implements DbApi {
 
   @override
   Future<bool> addJournal(Journal journal) async {
-    DocumentReference? _document = await
-    ? _firestore.collection(_collectionJournal).add({
-    'date':journal.date,
-    'mood':journal.mood,
-    'note':journal.note,
-    'uid':journal.uid,
+    DocumentReference? _document =
+        await _firestore.collection(_collectionJournal).add({
+      'date': journal.date,
+      'mood': journal.mood,
+      'note': journal.note,
+      'uid': journal.uid,
     });
-    return
-    _document
-    !=
-    null;
+    return _document != null;
   }
 
   @override
   void deleteJournal(Journal journal) {
-    _firestore.collection(_collectionJournal).doc(journal.uid)
+    _firestore
+        .collection(_collectionJournal)
+        .doc(journal.uid)
         .delete()
         .catchError((e) => print(e.toString()));
   }
 
-
   @override
   Future<Journal> getJournal(String documentID) {
-   //TODO: implement getJournal
+    //TODO: implement getJournal
     throw '';
   }
+
   @override
   Stream<List<Journal>> gitJournalList(String uid) {
-    return _firestore.collection(_collectionJournal).where(
-        'uid', isEqualTo: uid).snapshots().map((QuerySnapshot snapshot) {
-      print('$snapshot');
-      List<Journal> _journalDocs = snapshot.docs.map((e) => Journal.fromDocs(e))
-          .toList();
+    // print('${_firestore
+    //     .collection(_collectionJournal)
+    //     .where('uid', isEqualTo: uid).snapshots()} ][][][][][][][][][]');
+    return _firestore
+        .collection(_collectionJournal)
+        .where('uid', isEqualTo: uid)
+        .snapshots()
+        .map((QuerySnapshot<Map<String,dynamic>> snapshot) {
+      print('${snapshot.docs.map((journal) => journal).toList()} [][][][][][][]');
+      List<Journal> _journalDocs =
+          snapshot.docs.map((e) => Journal.fromDocs(e)).toList();
       _journalDocs.sort((comp1, comp2) => comp2.date.compareTo(comp1.date));
+
       return _journalDocs;
     });
   }
@@ -62,5 +66,4 @@ class DbFireStore implements DbApi {
   void updateJournalWithTransaction(Journal journal) {
     // TODO: implement updateJournalWithTransaction
   }
-
 }

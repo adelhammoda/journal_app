@@ -1,6 +1,5 @@
-import 'package:firebase_core/firebase_core.dart';
-
 import 'authentication_api.dart';
+
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,12 +18,11 @@ class AuthenticationService implements AuthenticationApi {
 
   @override
   Future<String> currentUserUid() async {
-    User? user = await
-    ? _firebaseAuth.currentUser;
-    if(user!=null)
-    return user.uid;
+    User? user = _firebaseAuth.currentUser;
+    if (user != null)
+      return user.uid;
     else
-    throw 'check your connection please.';
+      throw 'check your connection please.';
   }
 
   @override

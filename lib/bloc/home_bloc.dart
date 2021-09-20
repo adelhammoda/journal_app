@@ -20,8 +20,13 @@ class HomeBloc {
   Sink<List<Journal>> get _addListJournal => _journalController.sink;
 
   Stream<List<Journal>> get listJournal => _journalController.stream;
+
+
+
   final StreamController<Journal> _journalDeleteController =
   StreamController<Journal>.broadcast();
+
+  Sink<Journal> get deleteJournal => _journalDeleteController.sink;
 
   void dispose() {
     _journalController.close();

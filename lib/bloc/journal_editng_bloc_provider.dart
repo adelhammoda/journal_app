@@ -10,11 +10,11 @@ class JournalEditingBlocProvider extends InheritedWidget {
       : super(child: widget, key: key);
 
   static JournalEditingBlocProvider of(BuildContext context) {
-    return (context.dependOnInheritedWidgetOfExactType(
-        aspect: JournalEditingBlocProvider)) as JournalEditingBlocProvider;
+    print('${context.dependOnInheritedWidgetOfExactType(aspect: JournalEditingBlocProvider)}');
+    return (context.dependOnInheritedWidgetOfExactType(aspect: JournalEditingBlocProvider)) !;
   }
 
   @override
   bool updateShouldNotify(JournalEditingBlocProvider oldWidget) =>
-      false;
+      oldWidget.journalEditBloc!=journalEditBloc;
 }

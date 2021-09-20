@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:journal_app/bloc/authentication_bloc_proiverder.dart';
+import 'package:journal_app/bloc/authentication_block.dart';
+import 'package:journal_app/bloc/home_bloc.dart';
+import 'package:journal_app/bloc/home_bloc_provider.dart';
 import 'package:journal_app/screens/home_page.dart';
 import 'package:journal_app/screens/login.dart';
-
-
-
+import 'package:journal_app/services/authentication.dart';
+import 'package:journal_app/services/db_firestore.dart';
 
 
 void main() {
@@ -30,36 +35,65 @@ class _AppState extends State<App> {
       // Initialize FlutterFire:
       future: _initialization,
       builder: (context, snapshot) {
+
         // Check for errors
         if (snapshot.hasError) {
-          return MyApp(child: Scaffold(
-            body: Center(child: Text('error'),),
-          ));
+          return Container(
+              child:Center(
+                child:Text('error')
+              )
+          );
         }
 
         // Once complete, show your application
         if (snapshot.connectionState == ConnectionState.done) {
-          return MyApp(child: MyHomePage());
+          return MyApp();
         }
 
         // Otherwise, show something whilst waiting for initialization to complete
-        return MyApp(child: Scaffold(
-            body:Center(
-              child: Text('loading'),
-            )
-        ));
+        return Container(
+          child:CircularProgressIndicator()
+        );
       },
     );
   }
 }
 
-
 class MyApp extends StatelessWidget {
-   final Widget child;
-   MyApp({Key? key,required this.child}) : super(key: key);
+
+
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final AuthenticationBLoC _authenticationBloc =
+    AuthenticationBLoC(AuthenticationService());
+    return AuthenticationBlocProvider(
+      widget: StreamBuilder(
+        //TODO:add initial data from shared pref
+          initialData: null,
+          stream: _authenticationBloc.user,
+          builder: (context, AsyncSnapshot<String?> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasError) {
+              return _buildMaterialApp(Center(
+                child: CircularProgressIndicator(),
+              ));
+            }
+         if (snapshot.hasData) {
+              return HomeBlocProvider(child: _buildMaterialApp(MyHomePage()),
+                  homeBloc: HomeBloc(DbFireStore(), AuthenticationService()),
+                  uid: snapshot.data ?? '');
+            }
+
+            else
+            return _buildMaterialApp(LogIn());
+          }),
+      authenticationBloc: _authenticationBloc,
+    );
+  }
+
+  MaterialApp _buildMaterialApp(Widget home) {
+
     return MaterialApp(
       theme: ThemeData(
           textTheme: TextTheme(
@@ -67,11 +101,9 @@ class MyApp extends StatelessWidget {
               TextStyle(color: Colors.lightGreen.shade800, fontSize: 15)),
           primarySwatch: Colors.lightGreen,
           canvasColor: Colors.lightGreen.shade50,
-          bottomAppBarColor: Colors.lightGreen
-      ),
+          bottomAppBarColor: Colors.lightGreen),
       debugShowCheckedModeBanner: false,
-      home: child,
+      home: home,
     );
   }
 }
-

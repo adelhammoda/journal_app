@@ -11,7 +11,7 @@ class HomeBlocProvider extends InheritedWidget {
 
 
   static HomeBlocProvider of(BuildContext context){
-    return (context.dependOnInheritedWidgetOfExactType(aspect: HomeBlocProvider)) as HomeBlocProvider;
+    return (context.dependOnInheritedWidgetOfExactType(aspect: HomeBlocProvider)) !;
   }
 
   @override

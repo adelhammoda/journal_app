@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:journal_app/bloc/authentication_block.dart';
 import 'package:journal_app/bloc/login_bloc.dart';
 import 'package:journal_app/services/authentication.dart';
 import 'package:responsive_s/responsive_s.dart';
@@ -15,8 +16,8 @@ class _LogInState extends State<LogIn> {
   FocusNode _emailNode = FocusNode();
   FocusNode _passwordNode = FocusNode();
   FocusNode _confirmPasswordNode = FocusNode();
-  String realPassword='';
-  String confPassword='';
+  String realPassword = '';
+  String confPassword = '';
   bool changeAuthState = false;
 
   @override
@@ -77,7 +78,6 @@ class _LogInState extends State<LogIn> {
                 stream: _loginBLoc.password,
                 builder: (BuildContext context, AsyncSnapshot snapShot) =>
                     TextField(
-
                       onSubmitted: (value) {
                         if (changeAuthState)
                           _confirmPasswordNode.requestFocus();
@@ -97,37 +97,36 @@ class _LogInState extends State<LogIn> {
                             ? snapShot.error.toString()
                             : null,
                       ),
-                      onChanged: (password){
+                      onChanged: (password) {
                         setState(() {
-                          realPassword=password;
+                          realPassword = password;
                         });
                         _loginBLoc.passwordChange.add(password);
-
                       },
                     )),
-            AnimatedCrossFade(firstChild:
-             TextField(
-                focusNode: _confirmPasswordNode,
-                obscureText: true,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.confirmation_num),
-                  labelText: 'Confirm Password',
-                  errorText:realPassword==confPassword?null:'Unconfirmed Password',
-                  enabled: changeAuthState,
+            AnimatedCrossFade(
+                firstChild: TextField(
+                  focusNode: _confirmPasswordNode,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.confirmation_num),
+                    labelText: 'Confirm Password',
+                    errorText: realPassword == confPassword
+                        ? null
+                        : 'Unconfirmed Password',
+                    enabled: changeAuthState,
+                  ),
+                  onChanged: (String confirmedPassword) {
+                    setState(() {
+                      confPassword = confirmedPassword;
+                    });
+                  },
+                  onSubmitted: (_) {
+                    _confirmPasswordNode.unfocus();
+                    _emailNode.unfocus();
+                    _passwordNode.unfocus();
+                  },
                 ),
-                onChanged:(String confirmedPassword){
-                  setState(() {
-                    confPassword=confirmedPassword;
-                  });
-                },
-                onSubmitted: (_) {
-                      _confirmPasswordNode.unfocus();
-                  _emailNode.unfocus();
-                  _passwordNode.unfocus();
-                },
-
-              ),
-
                 secondChild: Container(),
                 crossFadeState: changeAuthState
                     ? CrossFadeState.showFirst
@@ -151,8 +150,8 @@ class _LogInState extends State<LogIn> {
         builder: (context, AsyncSnapshot snapshot) {
           // print('${snapshot.data}');
           return changeAuthState
-              ? buildLoginAndCreateButtons("Create Account", 'Login'):
-          buildLoginAndCreateButtons('Login', 'Create Account');
+              ? buildLoginAndCreateButtons("Create Account", 'Login')
+              : buildLoginAndCreateButtons('Login', 'Create Account');
         });
   }
 
@@ -167,13 +166,22 @@ class _LogInState extends State<LogIn> {
             children: [
               ElevatedButton(
                 child: Text(raisedButton),
-                onPressed: temp&&(changeAuthState?(realPassword==confPassword):true)
-                    ? () {
-                  _loginBLoc.loginOrCreateChanged.add(
-                      raisedButton.contains('Login')
-                          ? 'Login'
-                          : 'create');
-                }
+                onPressed: temp &&
+                        (changeAuthState
+                            ? (realPassword == confPassword)
+                            : true)
+                    ? () async {
+                        _loginBLoc.loginOrCreateChanged.add(
+                            raisedButton.contains('Login')
+                                ? 'Login'
+                                : 'create');
+                        AuthenticationBLoC _auth =
+                            new AuthenticationBLoC(AuthenticationService());
+                        String uid =
+                            await _loginBLoc.authenticationApi.currentUserUid();
+                        print('$uid');
+                        _auth.addUser.add(uid);
+                      }
                     : null,
               ),
               TextButton(
