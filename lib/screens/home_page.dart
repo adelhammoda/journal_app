@@ -83,76 +83,82 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     Widget _buildListViewSeparated(AsyncSnapshot<List<Journal>> snapshot) {
-      return ListView.separated(
-          itemBuilder: (context, int index) {
-            String _titleDate = _formatDates
-                .dateFormatShortMonthDayYear(snapshot.data![index].date);
-            String _subtitle =
-                snapshot.data![index].mood + "\n" + snapshot.data![index].note;
-            return Dismissible(
-                confirmDismiss: (direction) async {
-                  bool confirmDismiss = await _confirmDeleteJournal();
-                  if (confirmDismiss) {
-                    _homeBloc.deleteJournal.add(snapshot.data![index]);
-                  }
-                },
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: Icon(
-                    Icons.delete,
-                    color: Colors.white,
-                  ),
-                ),
-                secondaryBackground: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: EdgeInsets.only(right: 16.0),
-                  child: Icon(
-                    Icons.delete,
-                    color: Colors.white,
-                  ),
-                ),
-                key: Key(snapshot.data![index].documentId),
-                child: ListTile(
-                  trailing: Transform(
-                    transform: Matrix4.identity()
-                      ..rotateZ(_moodIcons
-                          .getMoodRotation(snapshot.data![index].mood)),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      _moodIcons.getMoodIcon(snapshot.data![index].mood),
-                      color:
-                          _moodIcons.getMoodColor(snapshot.data![index].mood),
-                    ),
-                  ),
-                  title: Text(_titleDate),
-                  subtitle: Text(_subtitle),
-                  onTap: () {
-                    _addOrEditJournal(
-                        add: false, journal: snapshot.data![index]);
-                  },
-                  leading: Column(
-                    children: <Widget>[
-                      Text(
-                        _formatDates
-                            .dateFormatDayNumber(snapshot.data![index].date),
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32.0,
-                            color: Colors.lightGreen),
+      return snapshot.data!.length > 0
+          ? ListView.separated(
+              itemBuilder: (context, int index) {
+                String _titleDate = _formatDates
+                    .dateFormatShortMonthDayYear(snapshot.data![index].date);
+                String _subtitle = snapshot.data![index].mood +
+                    "\n" +
+                    snapshot.data![index].note;
+                return Dismissible(
+                    confirmDismiss: (direction) async {
+                      bool confirmDismiss = await _confirmDeleteJournal();
+                      if (confirmDismiss) {
+                        print(snapshot.data![index].uid);
+                        _homeBloc.deleteJournal.add(snapshot.data![index]);
+                      }
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.only(left: 16.0),
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.white,
                       ),
-                      Text(_formatDates
-                          .dateFormatShortDayName(snapshot.data![index].date)),
-                    ],
+                    ),
+                    secondaryBackground: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: EdgeInsets.only(right: 16.0),
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
+                    ),
+                    key: Key(snapshot.data![index].documentId),
+                    child: ListTile(
+                      trailing: Transform(
+                        transform: Matrix4.identity()
+                          ..rotateZ(_moodIcons
+                              .getMoodRotation(snapshot.data![index].mood)),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _moodIcons.getMoodIcon(snapshot.data![index].mood),
+                          color: _moodIcons
+                              .getMoodColor(snapshot.data![index].mood),
+                        ),
+                      ),
+                      title: Text(_titleDate),
+                      subtitle: Text(_subtitle),
+                      onTap: () {
+                        _addOrEditJournal(
+                            add: false, journal: snapshot.data![index]);
+                      },
+                      leading: Column(
+                        children: <Widget>[
+                          Text(
+                            _formatDates.dateFormatDayNumber(
+                                snapshot.data![index].date),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 32.0,
+                                color: Colors.lightGreen),
+                          ),
+                          Text(_formatDates.dateFormatShortDayName(
+                              snapshot.data![index].date)),
+                        ],
+                      ),
+                    ));
+              },
+              separatorBuilder: (BuildContext context, int index) => Divider(
+                    color: Colors.grey,
                   ),
-                ));
-          },
-          separatorBuilder: (BuildContext context, int index) => Divider(
-                color: Colors.grey,
-              ),
-          itemCount: snapshot.data == null ? 0 : snapshot.data!.length);
+              itemCount: snapshot.data == null ? 0 : snapshot.data!.length)
+          : Center(child: Text('No thing to show. Try add something',style: TextStyle(
+        fontSize: responsive.setFont(5)
+      ),));
     }
 
     responsive = new Responsive(context);

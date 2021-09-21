@@ -41,11 +41,15 @@ class JournalEditBloc {
 
   Stream<String> get saveJournal => _saveJournalController.stream;
 
+  final StreamController<String> _loadingController=StreamController.broadcast();
+  Sink<String>  get _loadingOrNot=>_loadingController.sink;
+  Stream<String> get loadingOrSave=>_loadingController.stream;
   void dispose() {
     _dataController.close();
     _moodController.close();
     _noteController.close();
     _saveJournalController.close();
+    _loadingController.close();
   }
 
   Future<bool> _startEditListener() async {
@@ -60,7 +64,10 @@ class JournalEditBloc {
     });
     _saveJournalController.stream.listen((action) {
       if (action == 'Save') {
-        _saveJournal();
+        _loadingOrNot.add('waiting');
+        _saveJournal().then((bool isUpdate) {
+          _loadingOrNot.add(isUpdate==false?'error':'done');
+        });
       }
     });
     return true;
@@ -83,7 +90,8 @@ class JournalEditBloc {
     noteEditChanged.add(selectedJournal.note);
   }
 
-  void _saveJournal() {
+  Future<bool> _saveJournal() async{
+     Future<bool> added;
     Journal journal = Journal(
       documentId: selectedJournal.documentId,
       date: DateTime.parse(selectedJournal.date).toIso8601String(),
@@ -91,6 +99,7 @@ class JournalEditBloc {
       note: selectedJournal.note,
       uid: selectedJournal.uid,
     );
-    add ? dbApi.addJournal(journal) : dbApi.updateJournal(journal);
+    added= add ? dbApi.addJournal(journal): dbApi.updateJournal(journal);
+    return added;
   }
 }

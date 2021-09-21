@@ -36,7 +36,7 @@ class _AppState extends State<App> {
       future: _initialization,
       builder: (context, snapshot) {
 
-        // Check for errors
+        //Check for errors
         if (snapshot.hasError) {
           return Container(
               child:Center(
@@ -45,14 +45,19 @@ class _AppState extends State<App> {
           );
         }
 
-        // Once complete, show your application
+        //Once complete, show your application
         if (snapshot.connectionState == ConnectionState.done) {
           return MyApp();
         }
 
         // Otherwise, show something whilst waiting for initialization to complete
-        return Container(
-          child:CircularProgressIndicator()
+        return MaterialApp(
+          home: Scaffold(
+              body: Center(
+                child:Text('Loading...')
+              ),
+            
+          ),
         );
       },
     );
@@ -69,17 +74,20 @@ class MyApp extends StatelessWidget {
     final AuthenticationBLoC _authenticationBloc =
     AuthenticationBLoC(AuthenticationService());
     return AuthenticationBlocProvider(
-      widget: StreamBuilder(
+      widget: StreamBuilder<String?>(
         //TODO:add initial data from shared pref
           initialData: null,
           stream: _authenticationBloc.user,
           builder: (context, AsyncSnapshot<String?> snapshot) {
+            // print('${snapshot.data} ]]]]]]]]]]]]]]]]]]]]]]]');
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasError) {
-              return _buildMaterialApp(Center(
-                child: CircularProgressIndicator(),
+              return _buildMaterialApp(Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
               ));
             }
-         if (snapshot.hasData) {
+         else if (snapshot.data!=null) {
               return HomeBlocProvider(child: _buildMaterialApp(MyHomePage()),
                   homeBloc: HomeBloc(DbFireStore(), AuthenticationService()),
                   uid: snapshot.data ?? '');

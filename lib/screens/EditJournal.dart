@@ -59,7 +59,10 @@ class _EditJournalState extends State<EditJournal> {
 
   void _addOrUpdateJournal() {
     _journalEditBloc.saveJournalChanged.add('Save');
-    Navigator.of(context).pop();
+    _journalEditBloc.loadingOrSave.listen((String action) {
+      if(action=='done')
+        Navigator.of(context).pop();
+    });
   }
 
   @override
@@ -96,102 +99,135 @@ class _EditJournalState extends State<EditJournal> {
         ),
         body: SafeArea(
           minimum: EdgeInsets.all(30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StreamBuilder(
-                stream: _journalEditBloc.dataEdit,
-                builder: (context, AsyncSnapshot<String> snapshot) {
-                  if (!snapshot.hasData) return Container();
-                  return TextButton(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: responsive.setWidth(5),
-                          color: Colors.black54,
-                        ),
-                        SizedBox(
-                          width: responsive.setWidth(2),
-                        ),
-                        Text(
-                          _formatDates
-                              .dateFormatShortMonthDayYear(snapshot.data ?? ''),
-                          style: TextStyle(
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        Icon(Icons.arrow_drop_down, color: Colors.black54)
-                      ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StreamBuilder(
+                  stream: _journalEditBloc.dataEdit,
+                  builder: (context, AsyncSnapshot<String> snapshot) {
+                    if (!snapshot.hasData) return Container();
+                    return TextButton(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: responsive.setWidth(5),
+                            color: Colors.black54,
+                          ),
+                          SizedBox(
+                            width: responsive.setWidth(2),
+                          ),
+                          Text(
+                            _formatDates
+                                .dateFormatShortMonthDayYear(snapshot.data ?? ''),
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          Icon(Icons.arrow_drop_down, color: Colors.black54)
+                        ],
+                      ),
+                      onPressed: () async {
+                        FocusScope.of(context).requestFocus(FocusNode());
+                        String _pickerDate =
+                            await _selectDate(snapshot.data ?? '');
+                        _journalEditBloc.dataEditChanged.add(_pickerDate);
+                      },
+                    );
+                  },
+                ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StreamBuilder(
+                      builder: (context, AsyncSnapshot<String> snapshot) {
+                        if (!snapshot.hasData) return Container();
+                        // _noteController.value =
+                        //     _noteController.value.copyWith(text: snapshot.data);
+                        return Container(
+                          width: responsive.setWidth(60),
+                          child: TextField(
+                            controller: _noteController,
+                            textInputAction: TextInputAction.newline,
+                            textCapitalization: TextCapitalization.sentences,
+                            onChanged: (input) =>
+                                _journalEditBloc.noteEditChanged.add(input),
+                            maxLines: null,
+                            decoration: InputDecoration(
+                                labelText: 'Note', icon: Icon(Icons.subject)),
+                          ),
+                        );
+                      },
+                      stream: _journalEditBloc.noteEdit,
                     ),
-                    onPressed: () async {
-                      FocusScope.of(context).requestFocus(FocusNode());
-                      String _pickerDate =
-                          await _selectDate(snapshot.data ?? '');
-                      _journalEditBloc.dataEditChanged.add(_pickerDate);
-                    },
-                  );
-                },
-              ),
-              StreamBuilder(
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return Container();
-                  return DropdownButton<MoodIcons>(
-                    value: _moodIcons.getMoodIconsList()[_moodIcons
-                        .getMoodIconsList()
-                        .indexWhere((icon) => icon.title == snapshot.data)],
-                    onChanged: (selectedIcon) {
-                      if (selectedIcon != null)
-                        _journalEditBloc.moodEditChanged
-                            .add(selectedIcon.title);
-                    },
-                    items: _moodIcons.getMoodIconsList().map((moodIcon) {
-                      return DropdownMenuItem<MoodIcons>(
-                        value: moodIcon,
-                        child: Transform(
-                          child: Icon(moodIcon.icon, color: moodIcon.color),
-                          transform: Matrix4.identity()
-                            ..rotateZ(moodIcon.rotation),
-                        ),
-                        onTap: () {},
-                      );
-                    }).toList(growable: false),
-                  );
-                },
-                stream: _journalEditBloc.moodEdit,
-              ),
-              StreamBuilder(
-                builder: (context, AsyncSnapshot<String> snapshot) {
-                  if (!snapshot.hasData) return Container();
-                  // _noteController.value =
-                  //     _noteController.value.copyWith(text: snapshot.data);
-                  return TextField(
-                    controller: _noteController,
-                    textInputAction: TextInputAction.newline,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (input) =>
-                        _journalEditBloc.noteEditChanged.add(input),
-                    maxLines: null,
-                    decoration: InputDecoration(
-                        labelText: 'Note', icon: Icon(Icons.subject)),
-                  );
-                },
-                stream: _journalEditBloc.noteEdit,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end ,
-                mainAxisSize: MainAxisSize.max ,
-                children: [
-                  TextButton(onPressed: ()=>Navigator.of(context).pop(),style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.grey.shade100)
-                  ), child: Text('Cancel')),
-                  SizedBox(width: responsive.setWidth(3),),
-                  TextButton(onPressed: ()=>_addOrUpdateJournal(),style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.lightGreen.shade100)
-                  ), child: Text('Save'))
-                ],
-              )
-            ],
+                    StreamBuilder(
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return Container();
+                        return DropdownButton<MoodIcons>(
+                          value: _moodIcons.getMoodIconsList()[_moodIcons
+                              .getMoodIconsList()
+                              .indexWhere((icon) => icon.title == snapshot.data)],
+                          onChanged: (selectedIcon) {
+                            if (selectedIcon != null)
+                              _journalEditBloc.moodEditChanged
+                                  .add(selectedIcon.title);
+                          },
+                          items: _moodIcons.getMoodIconsList().map((moodIcon) {
+                            return DropdownMenuItem<MoodIcons>(
+                              value: moodIcon,
+                              child: Transform(
+                                child: Icon(moodIcon.icon, color: moodIcon.color),
+                                transform: Matrix4.identity()
+                                  ..rotateZ(moodIcon.rotation),
+                              ),
+                              onTap: () {},
+                            );
+                          }).toList(growable: false),
+                        );
+                      },
+                      stream: _journalEditBloc.moodEdit,
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: responsive.setHeight(3),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end ,
+                  mainAxisSize: MainAxisSize.max ,
+                  children: [
+
+                    SizedBox(width: responsive.setWidth(3),),
+                    TextButton(onPressed: ()=>Navigator.of(context).pop(),style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.grey.shade100)
+                    ), child: Text('Cancel')),
+                    StreamBuilder<String>(
+                        initialData: 'Save',
+                        stream: _journalEditBloc.loadingOrSave,
+                        builder: (context, snapshot) {
+                          if(snapshot.data=='Save' || snapshot.data=='done')
+                            return TextButton(onPressed: (){
+                              _addOrUpdateJournal();
+                            },style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(Colors.lightGreen.shade100)
+                            ), child: Text(snapshot.data.toString()));
+                          else if(snapshot.data=='waiting')
+                            return CircularProgressIndicator();
+                          else
+                            return Text('error',style:TextStyle(
+                                color: Colors.red,
+                                fontSize: responsive.setFont(3)
+                            ));
+                        }
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         ));
   }

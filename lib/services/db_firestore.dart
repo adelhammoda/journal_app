@@ -1,4 +1,3 @@
-// ignore: import_of_legacy_library_into_null_safe
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:journal_app/models/journal.dart';
 import 'package:journal_app/services/db_firestore_api.dart';
@@ -23,8 +22,8 @@ class DbFireStore implements DbApi {
   void deleteJournal(Journal journal) {
     _firestore
         .collection(_collectionJournal)
-        .doc(journal.uid)
-        .delete()
+        .doc(journal.documentId)
+        .delete().then((value) => print('deleted ///////////'))
         .catchError((e) => print(e.toString()));
   }
 
@@ -36,15 +35,11 @@ class DbFireStore implements DbApi {
 
   @override
   Stream<List<Journal>> gitJournalList(String uid) {
-    // print('${_firestore
-    //     .collection(_collectionJournal)
-    //     .where('uid', isEqualTo: uid).snapshots()} ][][][][][][][][][]');
     return _firestore
         .collection(_collectionJournal)
         .where('uid', isEqualTo: uid)
         .snapshots()
         .map((QuerySnapshot<Map<String,dynamic>> snapshot) {
-      print('${snapshot.docs.map((journal) => journal).toList()} [][][][][][][]');
       List<Journal> _journalDocs =
           snapshot.docs.map((e) => Journal.fromDocs(e)).toList();
       _journalDocs.sort((comp1, comp2) => comp2.date.compareTo(comp1.date));
@@ -54,12 +49,18 @@ class DbFireStore implements DbApi {
   }
 
   @override
-  void updateJournal(Journal journal) async {
+  Future<bool> updateJournal(Journal journal) async {
+    late bool result;
     await _firestore.collection(_collectionJournal).doc(journal.uid).update({
       'date': journal.date,
       'mood': journal.mood,
       'note': journal.note,
-    }).catchError((e) => print('$e'));
+    }).catchError((e) {
+      result= false;
+    }).then((value) {
+      result =true;
+    });
+    return result;
   }
 
   @override

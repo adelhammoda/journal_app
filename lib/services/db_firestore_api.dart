@@ -7,7 +7,7 @@ abstract class DbApi {
 
   Future<bool> addJournal(Journal journal);
 
-  void updateJournal(Journal journal);
+  Future<bool> updateJournal(Journal journal);
 
   void updateJournalWithTransaction(Journal journal);
 
