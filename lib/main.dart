@@ -6,10 +6,13 @@ import 'package:journal_app/bloc/authentication_bloc_proiverder.dart';
 import 'package:journal_app/bloc/authentication_block.dart';
 import 'package:journal_app/bloc/home_bloc.dart';
 import 'package:journal_app/bloc/home_bloc_provider.dart';
+import 'package:journal_app/bloc/setting_bloc_provider.dart';
 import 'package:journal_app/screens/home_page.dart';
 import 'package:journal_app/screens/login.dart';
 import 'package:journal_app/services/authentication.dart';
 import 'package:journal_app/services/db_firestore.dart';
+
+
 
 
 void main() {
@@ -79,39 +82,63 @@ class MyApp extends StatelessWidget {
           initialData: null,
           stream: _authenticationBloc.user,
           builder: (context, AsyncSnapshot<String?> snapshot) {
-            // print('${snapshot.data} ]]]]]]]]]]]]]]]]]]]]]]]');
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasError) {
-              return _buildMaterialApp(Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ));
+              return SettingState(
+                child: _buildMaterialApp(Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )),
+              );
             }
          else if (snapshot.data!=null) {
-              return HomeBlocProvider(child: _buildMaterialApp(MyHomePage()),
-                  homeBloc: HomeBloc(DbFireStore(), AuthenticationService()),
-                  uid: snapshot.data ?? '');
+              return SettingState(
+                child: HomeBlocProvider(child: _buildMaterialApp(MyHomePage()),
+                    homeBloc: HomeBloc(DbFireStore(), AuthenticationService()),
+                    uid: snapshot.data ?? ''),
+              );
             }
 
             else
-            return _buildMaterialApp(LogIn());
+            return  SettingState(
+              child:_buildMaterialApp(LogIn()),
+            );
           }),
       authenticationBloc: _authenticationBloc,
     );
   }
 
-  MaterialApp _buildMaterialApp(Widget home) {
+  Widget _buildMaterialApp(Widget home) {
+    return Builder(
+      builder:(BuildContext context){
+        return MaterialApp(
+        theme: ThemeData(
+          iconTheme: IconThemeData(
+            color:
+             SettingProvider.of(context).setting.iconColor
 
-    return MaterialApp(
-      theme: ThemeData(
-          textTheme: TextTheme(
-              headline6:
-              TextStyle(color: Colors.lightGreen.shade800, fontSize: 15)),
-          primarySwatch: Colors.lightGreen,
-          canvasColor: Colors.lightGreen.shade50,
-          bottomAppBarColor: Colors.lightGreen),
-      debugShowCheckedModeBanner: false,
-      home: home,
+          ),
+            textTheme: TextTheme(
+              bodyText1:TextStyle(
+                  color: SettingProvider.of(context).setting.textColor
+              )  ,
+              bodyText2: TextStyle(
+                  color: SettingProvider.of(context).setting.textColor
+              ) ,
+              button: TextStyle(
+                color: SettingProvider.of(context).setting.textColor
+              ) ,
+                headline6:
+                TextStyle(color: Colors.lightGreen.shade800, fontSize: 15,)),
+            primarySwatch: SettingProvider.of(context).setting.primarySwatch ,
+            canvasColor:  SettingProvider.of(context).setting.canvasColor,
+            bottomAppBarColor:  SettingProvider.of(context).setting.appBarColor
+        ),
+        debugShowCheckedModeBanner: false,
+        home: home,
+      );
+      },
     );
   }
+
 }

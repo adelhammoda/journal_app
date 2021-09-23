@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:journal_app/bloc/journal_edit_bloc.dart';
 import 'package:journal_app/bloc/journal_editng_bloc_provider.dart';
+import 'package:journal_app/bloc/setting_bloc_provider.dart';
 import 'package:journal_app/classes/data_format.dart';
 import 'package:journal_app/classes/material.dart';
-import 'package:journal_app/widgets/widgets.dart';
+import 'package:journal_app/widgets/app_bar.dart';
 import 'package:responsive_s/responsive_s.dart';
 
 class EditJournal extends StatefulWidget {
@@ -60,8 +61,7 @@ class _EditJournalState extends State<EditJournal> {
   void _addOrUpdateJournal() {
     _journalEditBloc.saveJournalChanged.add('Save');
     _journalEditBloc.loadingOrSave.listen((String action) {
-      if(action=='done')
-        Navigator.of(context).pop();
+      if (action == 'done') Navigator.of(context).pop();
     });
   }
 
@@ -75,30 +75,10 @@ class _EditJournalState extends State<EditJournal> {
   Widget build(BuildContext context) {
     Responsive responsive = Responsive(context);
     return Scaffold(
-        drawer: MyDrawer(),
-        appBar: AppBar(
-          title: Text(
-            'Entry',
-            style: TextStyle(color: Colors.lightGreen.shade800),
-          ),
-          automaticallyImplyLeading: false,
-          elevation: 0.0,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.lightGreen,
-                  Colors.lightGreen.shade200,
-                  Colors.lightGreen.shade50
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ),
+        appBar: buildAppBar(
+            context: context, responsive: responsive, title: 'Edit'),
         body: SafeArea(
-          minimum: EdgeInsets.all(30),
+          minimum: EdgeInsets.all(responsive.setWidth(2)),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,19 +93,24 @@ class _EditJournalState extends State<EditJournal> {
                           Icon(
                             Icons.calendar_today,
                             size: responsive.setWidth(5),
-                            color: Colors.black54,
+                            color:
+                                SettingProvider.of(context).setting.textColor,
                           ),
                           SizedBox(
                             width: responsive.setWidth(2),
                           ),
                           Text(
-                            _formatDates
-                                .dateFormatShortMonthDayYear(snapshot.data ?? ''),
+                            _formatDates.dateFormatShortMonthDayYear(
+                                snapshot.data ?? ''),
                             style: TextStyle(
-                                color: Colors.black54,
+                                color: SettingProvider.of(context)
+                                    .setting
+                                    .iconColor,
                                 fontWeight: FontWeight.bold),
                           ),
-                          Icon(Icons.arrow_drop_down, color: Colors.black54)
+                          Icon(Icons.arrow_drop_down,
+                              color:
+                                  SettingProvider.of(context).setting.iconColor)
                         ],
                       ),
                       onPressed: () async {
@@ -137,7 +122,6 @@ class _EditJournalState extends State<EditJournal> {
                     );
                   },
                 ),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
@@ -157,8 +141,33 @@ class _EditJournalState extends State<EditJournal> {
                             onChanged: (input) =>
                                 _journalEditBloc.noteEditChanged.add(input),
                             maxLines: null,
+                            cursorColor: Colors.white,
+                            style: TextStyle(
+                                color: SettingProvider.of(context)
+                                    .setting
+                                    .textColor),
                             decoration: InputDecoration(
-                                labelText: 'Note', icon: Icon(Icons.subject)),
+                              focusColor:
+                                  SettingProvider.of(context).setting.iconColor,
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                      style: BorderStyle.solid,
+                                      color: SettingProvider.of(context)
+                                          .setting
+                                          .iconColor)),
+                              labelStyle: TextStyle(
+                                color: SettingProvider.of(context)
+                                    .setting
+                                    .textColor,
+                              ),
+                              labelText: 'Note',
+                              icon: Icon(
+                                Icons.subject,
+                                color: SettingProvider.of(context)
+                                    .setting
+                                    .iconColor,
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -170,7 +179,8 @@ class _EditJournalState extends State<EditJournal> {
                         return DropdownButton<MoodIcons>(
                           value: _moodIcons.getMoodIconsList()[_moodIcons
                               .getMoodIconsList()
-                              .indexWhere((icon) => icon.title == snapshot.data)],
+                              .indexWhere(
+                                  (icon) => icon.title == snapshot.data)],
                           onChanged: (selectedIcon) {
                             if (selectedIcon != null)
                               _journalEditBloc.moodEditChanged
@@ -180,7 +190,8 @@ class _EditJournalState extends State<EditJournal> {
                             return DropdownMenuItem<MoodIcons>(
                               value: moodIcon,
                               child: Transform(
-                                child: Icon(moodIcon.icon, color: moodIcon.color),
+                                child:
+                                    Icon(moodIcon.icon, color: moodIcon.color),
                                 transform: Matrix4.identity()
                                   ..rotateZ(moodIcon.rotation),
                               ),
@@ -197,33 +208,46 @@ class _EditJournalState extends State<EditJournal> {
                   height: responsive.setHeight(3),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end ,
-                  mainAxisSize: MainAxisSize.max ,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.max,
                   children: [
-
-                    SizedBox(width: responsive.setWidth(3),),
-                    TextButton(onPressed: ()=>Navigator.of(context).pop(),style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.grey.shade100)
-                    ), child: Text('Cancel')),
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                Colors.grey.shade100)),
+                        child: Text('Cancel')),
+                    SizedBox(
+                      width: responsive.setWidth(3),
+                    ),
                     StreamBuilder<String>(
                         initialData: 'Save',
                         stream: _journalEditBloc.loadingOrSave,
                         builder: (context, snapshot) {
-                          if(snapshot.data=='Save' || snapshot.data=='done')
-                            return TextButton(onPressed: (){
-                              _addOrUpdateJournal();
-                            },style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(Colors.lightGreen.shade100)
-                            ), child: Text(snapshot.data.toString()));
-                          else if(snapshot.data=='waiting')
-                            return CircularProgressIndicator();
+                          if (snapshot.data == 'Save' ||
+                              snapshot.data == 'done')
+                            return TextButton(
+                                onPressed: () {
+                                  _addOrUpdateJournal();
+                                },
+                                style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(
+                                        Colors.lightGreen.shade100)),
+                                child: Text(snapshot.data.toString()));
+                          else if (snapshot.data == 'waiting')
+                            return CircularProgressIndicator(
+                              color: SettingProvider.of(context).setting.isLight
+                                  ? Colors.blue
+                                  : SettingProvider.of(context)
+                                      .setting
+                                      .textColor,
+                            );
                           else
-                            return Text('error',style:TextStyle(
-                                color: Colors.red,
-                                fontSize: responsive.setFont(3)
-                            ));
-                        }
-                    ),
+                            return Text('error',
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: responsive.setFont(3)));
+                        }),
                   ],
                 )
               ],

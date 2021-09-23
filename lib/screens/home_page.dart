@@ -5,12 +5,14 @@ import 'package:journal_app/bloc/home_bloc.dart';
 import 'package:journal_app/bloc/home_bloc_provider.dart';
 import 'package:journal_app/bloc/journal_edit_bloc.dart';
 import 'package:journal_app/bloc/journal_editng_bloc_provider.dart';
+import 'package:journal_app/bloc/setting_bloc_provider.dart';
 import 'package:journal_app/classes/data_format.dart';
 import 'package:journal_app/classes/material.dart';
 import 'package:journal_app/models/journal.dart';
 import 'package:journal_app/screens/EditJournal.dart';
 import 'package:journal_app/services/db_firestore.dart';
-import 'package:journal_app/widgets/widgets.dart';
+import 'package:journal_app/widgets/app_bar.dart';
+import 'package:journal_app/widgets/drawer.dart';
 import 'package:responsive_s/responsive_s.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -100,7 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                     },
                     background: Container(
-                      color: Colors.red,
+                      color: SettingProvider.of(context).setting.isLight
+                          ? Colors.red
+                          : Colors.redAccent.shade100,
                       alignment: Alignment.centerLeft,
                       padding: EdgeInsets.only(left: 16.0),
                       child: Icon(
@@ -114,7 +118,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: EdgeInsets.only(right: 16.0),
                       child: Icon(
                         Icons.delete,
-                        color: Colors.white,
+                        color: SettingProvider.of(context).setting.isLight
+                            ? Colors.white
+                            : Colors.blue,
                       ),
                     ),
                     key: Key(snapshot.data![index].documentId),
@@ -144,7 +150,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 32.0,
-                                color: Colors.lightGreen),
+                                color: SettingProvider.of(context)
+                                    .setting
+                                    .textColor),
                           ),
                           Text(_formatDates.dateFormatShortDayName(
                               snapshot.data![index].date)),
@@ -156,68 +164,48 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.grey,
                   ),
               itemCount: snapshot.data == null ? 0 : snapshot.data!.length)
-          : Center(child: Text('No thing to show. Try add something',style: TextStyle(
-        fontSize: responsive.setFont(5)
-      ),));
+          : Center(
+              child: Text(
+              'No thing to show. Try add something',
+              style: TextStyle(fontSize: responsive.setFont(5)),
+            ));
     }
 
     responsive = new Responsive(context);
     return Scaffold(
       drawer: MyDrawer(),
-      backgroundColor: Colors.lightGreen.shade50,
-      appBar: AppBar(
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.exit_to_app,
-              color: Colors.lightGreen.shade800,
-            ),
-            onPressed: () {
-              _authenticationBloc.logoutUser.add(true);
-            },
-          ),
-        ],
-        bottom: PreferredSize(
-          child: Container(),
-          preferredSize: Size.fromHeight(responsive.setHeight(3)),
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-            colors: [
-              Colors.lightGreen,
-              Colors.lightGreen.shade50,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          )),
-          width: 60,
-        ),
-        elevation: 0.0,
-        title: Text('Journal app'),
-      ),
+      backgroundColor: SettingProvider.of(context).setting.backgroundColor,
+      appBar: buildAppBar(
+          context: context,
+          responsive: responsive,
+          onPressed: () {
+            _authenticationBloc.logoutUser.add(true);
+          },
+          title: 'journal'),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
         child: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-            colors: [
-              Colors.lightGreen.shade50,
-              Colors.lightGreen,
-            ],
+            colors: SettingProvider.of(context).setting.gradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           )),
           height: responsive.setHeight(10),
           width: 60,
         ),
-        elevation: 0,
+        elevation: 0.0,
       ),
       body: StreamBuilder<List<Journal>>(
           stream: _homeBloc.listJournal,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting)
-              return Center(child: CircularProgressIndicator());
+              return Center(
+                  child: CircularProgressIndicator(
+                color: SettingProvider.of(context).setting.isLight
+                    ? Colors.blue
+                    : SettingProvider.of(context).setting.iconColor,
+              ));
             else if (snapshot.hasData)
               return _buildListViewSeparated(snapshot);
             else
@@ -225,8 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
           }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.lightGreen.shade300,
-        onPressed: () async {
+        backgroundColor: SettingProvider.of(context).setting.buttonsColor,
+        onPressed: () {
           _addOrEditJournal(add: true, journal: Journal(uid: _uid));
         },
         tooltip: 'Add Journal',

@@ -6,8 +6,7 @@ import 'package:journal_app/services/authentication_api.dart';
 
 class AuthenticationBLoC {
  final AuthenticationApi _authenticationApi;
-  final StreamController<String?> _authenticationController = StreamController<
-      String?>();
+  final StreamController<String?> _authenticationController = StreamController<String?>.broadcast();
 
   Sink<String?> get addUser => _authenticationController.sink;
 
@@ -25,8 +24,10 @@ class AuthenticationBLoC {
  }
  void onAuthChanged(){
    _authenticationApi.getFireBaseAuth().authStateChanges().listen((user) {
-     final String? uid=user!=null?user.uid:null;
+
+      final String? uid=user!=null?user.uid:null;
      addUser.add(uid);
+      print('$uid');
 
    });
    _logoutController.stream.listen((loggedOut) {
